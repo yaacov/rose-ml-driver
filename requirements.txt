@@ -1,0 +1,4 @@
+# requirements.txt
+
+# Requires torch
+# see: https://pytorch.org/get-started/locally/
