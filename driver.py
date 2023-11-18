@@ -178,7 +178,7 @@ def view_to_inputs(array):
             obstacle = array[i][j]
             tensor[i, j, OBSTACLE_TO_INDEX[obstacle]] = 1
 
-    return tensor.view(-1).unsqueeze(0)
+    return tensor.view(-1)
 
 
 def outputs_to_action(output, world):
@@ -216,6 +216,31 @@ def outputs_to_action(output, world):
     else:
         return obstacle_action_map.get(obstacle, actions.NONE)
 
+
+def action_to_outputs(action):
+    """
+    Converts an action into a target tensor.
+
+    This function takes an action (LEFT, RIGHT, or other) and converts it into a target tensor with three elements.
+    The tensor's elements correspond to the actions LEFT, forward, and RIGHT respectively. The element corresponding
+    to the given action is set to 1, and the others are set to 0.
+
+    Args:
+        action (str): The action to convert. Should be one of the actions defined in the `actions` class.
+
+    Returns:
+        torch.Tensor: A tensor of shape (3,) where the element corresponding to the given action is 1, and the others are 0.
+    """
+    target = torch.zeros(3)
+
+    if action == actions.LEFT:
+        target[0] = 1
+    elif action == actions.RIGHT:
+        target[2] = 1
+    else:
+        target[1] = 1
+
+    return target
 
 # Drive
 # ----------------------------------------------------------------------------------
@@ -295,7 +320,7 @@ def drive(world):
 
     view = build_lane_view(world, view_height, lane, flip_world)
 
-    input_tensor = view_to_inputs(view)
+    input_tensor = view_to_inputs(view).unsqueeze(0)
 
     if x_in_lane == 1:
         output = model_x1(input_tensor)
