@@ -1,9 +1,20 @@
 """
 Torch driver training
 
-This driver requires PyTorch to be installed, see: https://pytorch.org/get-started/locally/
+This script is used to train a deep learning model for a driving simulator. The model is trained using PyTorch.
 
-Trained models are expected to be in the checkpoints directory.
+The script generates a 4x3 2D array with random obstacles and simulates the driver's decision based on the obstacle in front of the car. 
+The driver's decision and the 2D array are used to generate a batch of samples for training. 
+
+The model is trained for a specified number of epochs. In each epoch, the model is trained over a number of batches. 
+For each batch, the model's parameters are updated based on the computed loss between the model's predictions and the actual targets.
+
+The script requires PyTorch to be installed. See: https://pytorch.org/get-started/locally/
+
+The trained model is saved in the checkpoints directory.
+
+Usage:
+    python train.py
 """
 
 try:
