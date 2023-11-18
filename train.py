@@ -29,16 +29,6 @@ OBSTACLE_TO_INDEX = {
     "barrier": 6,
 }
 
-def generate_obstacle_array():
-    array = [["" for _ in range(3)] for _ in range(4)]
-
-    for i in range(4):
-        obstacle = random.choice(list(OBSTACLE_TO_INDEX.keys()))
-        position = random.randint(0, 2)
-        array[i][position] = obstacle
-
-    return array
-
 # Car lane, 0 - left, 1 - middle
 car_x = 1
 
@@ -56,6 +46,7 @@ learning_rate = 0.001
 # Create model, loss function, and optimizer
 model = DriverModel()
 
+# Read starting checkpoint, if available
 if checkpoint_in != "":
     model.load_state_dict(torch.load(checkpoint_in))
     model.eval()
@@ -65,7 +56,34 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 
+def generate_obstacle_array():
+    """
+    Generates a 4x3 2D array with random obstacles.
+
+    Returns:
+        list[list[str]]: 4x3 2D array with random obstacles.
+    """
+    array = [["" for _ in range(3)] for _ in range(4)]
+
+    for i in range(4):
+        obstacle = random.choice(list(OBSTACLE_TO_INDEX.keys()))
+        position = random.randint(0, 2)
+        array[i][position] = obstacle
+
+    return array
+
+
 def driver_simulator(array, car_x):
+    """
+    Simulates the driver's decision based on the obstacle in front of the car.
+
+    Args:
+        array (list[list[str]]): 2D array representation of the world with obstacles as strings.
+        car_x (int): The car's x position.
+
+    Returns:
+        str: The determined action for the car to take. Possible actions include those defined in the `actions` class.
+    """
     obstacle = array[3][car_x]
 
     if obstacle == obstacles.PENGUIN:
@@ -79,8 +97,17 @@ def driver_simulator(array, car_x):
     else:
         return actions.RIGHT if (car_x % 3) == 0 else actions.LEFT
 
-# Helper function to generate a batch of samples
+
 def generate_batch(batch_size):
+    """
+    Generates a batch of samples for training.
+
+    Args:
+        batch_size (int): The number of samples in the batch.
+
+    Returns:
+        tuple: A tuple containing two tensors. The first tensor contains the inputs for the model, and the second tensor contains the target outputs.
+    """
     inputs = []
     targets = []
     for _ in range(batch_size):
@@ -97,25 +124,33 @@ def generate_batch(batch_size):
 
 # Training loop
 for epoch in range(num_epochs):
+    # Initialize running loss to 0.0 at the start of each epoch
     running_loss = 0.0
 
     # Assuming you have a dataset size, calculate the number of batches
     num_batches = 100
 
+    # Loop over each batch
     for i in range(num_batches):
-        # Get training data
+        # Get a batch of training data
         inputs, targets = generate_batch(batch_size)
 
-        # Zero the parameter gradients
+        # Reset the gradients in the optimizer (i.e., make it forget the gradients computed in the previous iteration)
         optimizer.zero_grad()
 
-        # Forward + backward + optimize
+        # Forward pass: compute predicted outputs by passing inputs to the model
         outputs = model(inputs)
+
+        # Compute loss: calculate the batch loss based on the difference between the predicted outputs and the actual targets
         loss = criterion(outputs, targets)
+
+        # Backward pass: compute gradient of the loss with respect to model parameters
         loss.backward()
+
+        # Perform a single optimization step (parameter update)
         optimizer.step()
 
-        # Print statistics
+        # Update running loss
         running_loss += loss.item()
 
     # Print average loss for the epoch
