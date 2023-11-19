@@ -25,6 +25,7 @@ except ImportError:
     exit()
 
 import random
+import argparse
 import torch.nn as nn
 import torch.optim as optim
 
@@ -41,30 +42,19 @@ OBSTACLE_TO_INDEX = {
 }
 
 # Car lane, 0 - left, 1 - middle
-car_x = 1
-
-# checkpoint_in - if not empty, load this model before starting the training
-# checkpoint_out - save trained model as
-checkpoint_in = ""
-checkpoint_out = f"driver-x{car_x}.pth"
+car_x = 0
 
 # Training parameters
-num_epochs = 10
-batch_size = 200
-learning_rate = 0.001
+num_epochs = 0
+batch_size = 0
+learning_rate = 0
 
+# Set loss function and backprpogation method
+criterion = None
+optimizer = None
 
 # Create model, loss function, and optimizer
 model = DriverModel()
-
-# Read starting checkpoint, if available
-if checkpoint_in != "":
-    model.load_state_dict(torch.load(checkpoint_in))
-    model.eval()
-
-# Set loss function and backprpogation method
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 
 def generate_obstacle_array():
@@ -134,39 +124,70 @@ def generate_batch(batch_size):
 
 
 # Training loop
-for epoch in range(num_epochs):
-    # Initialize running loss to 0.0 at the start of each epoch
-    running_loss = 0.0
+def main():
+    for epoch in range(num_epochs):
+        # Initialize running loss to 0.0 at the start of each epoch
+        running_loss = 0.0
+    
+        # Assuming you have a dataset size, calculate the number of batches
+        num_batches = 100
+    
+        # Loop over each batch
+        for i in range(num_batches):
+            # Get a batch of training data
+            inputs, targets = generate_batch(batch_size)
+    
+            # Reset the gradients in the optimizer (i.e., make it forget the gradients computed in the previous iteration)
+            optimizer.zero_grad()
+    
+            # Forward pass: compute predicted outputs by passing inputs to the model
+            outputs = model(inputs)
+    
+            # Compute loss: calculate the batch loss based on the difference between the predicted outputs and the actual targets
+            loss = criterion(outputs, targets)
+    
+            # Backward pass: compute gradient of the loss with respect to model parameters
+            loss.backward()
+    
+            # Perform a single optimization step (parameter update)
+            optimizer.step()
+    
+            # Update running loss
+            running_loss += loss.item()
+    
+        # Print average loss for the epoch
+        print(f"Epoch {epoch+1}, Loss: {running_loss / num_batches}")
+    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Train the model.')
+    parser.add_argument('--checkpoint-in', default="", help='Path to the input checkpoint file.')
+    parser.add_argument('--checkpoint-out', default=f"driver-x{car_x}.pth", help='Path to the output checkpoint file.')
+    parser.add_argument('--num-epochs', type=int, default=10, help='Number of epochs for training.')
+    parser.add_argument('--batch-size', type=int, default=200, help='Batch size for training.')
+    parser.add_argument('--learning-rate', type=float, default=0.001, help='Learning rate for training.')
+    parser.add_argument('--lane', type=int, default=1, help='Car lane, 0 - left, 1 - middle.')
+    args = parser.parse_args()
 
-    # Assuming you have a dataset size, calculate the number of batches
-    num_batches = 100
+    # Car lane, 0 - left, 1 - middle
+    car_x = args.lane
 
-    # Loop over each batch
-    for i in range(num_batches):
-        # Get a batch of training data
-        inputs, targets = generate_batch(batch_size)
+    # Training parameters
+    num_epochs = args.num_epochs
+    batch_size = args.batch_size
+    learning_rate = args.learning_rate
 
-        # Reset the gradients in the optimizer (i.e., make it forget the gradients computed in the previous iteration)
-        optimizer.zero_grad()
+    # Set loss function and backprpogation method
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-        # Forward pass: compute predicted outputs by passing inputs to the model
-        outputs = model(inputs)
+    # Read starting checkpoint, if available
+    if args.checkpoint_in != "":
+        model.load_state_dict(torch.load(args.checkpoint_in))
+        model.eval()
+    
+    # Run training
+    main()
+    print("Finished Training")
 
-        # Compute loss: calculate the batch loss based on the difference between the predicted outputs and the actual targets
-        loss = criterion(outputs, targets)
-
-        # Backward pass: compute gradient of the loss with respect to model parameters
-        loss.backward()
-
-        # Perform a single optimization step (parameter update)
-        optimizer.step()
-
-        # Update running loss
-        running_loss += loss.item()
-
-    # Print average loss for the epoch
-    print(f"Epoch {epoch+1}, Loss: {running_loss / num_batches}")
-
-torch.save(model.state_dict(), checkpoint_out)
-
-print("Finished Training")
+    torch.save(model.state_dict(), args.checkpoint_out)
+    
