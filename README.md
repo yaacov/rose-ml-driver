@@ -20,4 +20,10 @@ Run the server:
 podman run --rm --network host -it quay.io/rose/rose-server:latest --drivers http://127.0.0.1:8082
 ```
 
+Run locally:
+
+```bash
+python client/main.py -d ./driver.py
+```
+
 Browse to http://127.0.0.1:8880 to run the game.
