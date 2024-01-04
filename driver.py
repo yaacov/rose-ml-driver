@@ -36,8 +36,9 @@ This is a driver choosing the next action by consolting a neural network.
 driver_name = "Torch Car"
 
 
-# Get some trained models
+# Get the trained model
 # ----------------------------------------------------------------------------------
+
 
 # Model trained using a simulator
 checkpoint = os.path.join(script_directory, "checkpoints", "driver.pth")
