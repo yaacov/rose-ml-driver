@@ -118,12 +118,14 @@ def drive(world):
     lane = 0 if world.car.x < 3 else 1
     x_in_lane = world.car.x % 3
 
+    # Convert real world input, into a tensor
     view = build_lane_view(world, view_height, lane)
-
     input_tensor = view_to_inputs(view, x_in_lane).unsqueeze(0)
 
+    # Use neural network model to get the outputs tensor
     output = model(input_tensor)
 
+    # Convert the output tensor into a real world response
     action = outputs_to_action(output, world)
 
     return action
