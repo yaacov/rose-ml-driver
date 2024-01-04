@@ -17,7 +17,10 @@ Run the server:
 
 ``` bash
 # Start the ROSE game server, and connect to the Go driver
-podman run --rm --network host -it quay.io/rose/rose-server:latest --drivers http://127.0.0.1:8082
+podman run --rm \
+  --network host \
+  -it quay.io/rose/rose-server:latest \
+  --drivers http://127.0.0.1:8082
 ```
 
 Run locally:

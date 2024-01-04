@@ -26,10 +26,7 @@ except ImportError:
     print("       see: https://pytorch.org/get-started/locally/")
     exit()
 
-import torch.nn as nn
-import torch.nn.functional as F
-
-from model import DriverModel, outputs_to_action, actions, view_to_inputs
+from model import DriverModel, outputs_to_action, view_to_inputs
 
 """
 Torch Car
@@ -42,13 +39,8 @@ driver_name = "Torch Car"
 # Get some trained models
 # ----------------------------------------------------------------------------------
 
-# The checkpoints directory include trainde models
-#       Note: car on right is mirror of left, no need for a new model
-script_dir = os.path.dirname(os.path.abspath(__file__))
-
 # Model trained using a simulator
-checkpoint = os.path.join(script_dir, "checkpoints", "driver.pth")
-
+checkpoint = os.path.join(script_directory, "checkpoints", "driver.pth")
 
 model = DriverModel()
 model.load_state_dict(torch.load(checkpoint))
