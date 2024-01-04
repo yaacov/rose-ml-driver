@@ -57,7 +57,7 @@ class DriverModel(nn.Module):
 
     Architecture:
     - Input layer: Size determined by
-      3 (width) x 4 (height) x 7 (possible obstacles) + 3 (car current lane)= 87 neurons.
+      3 (width) x 4 (height) x 7 (possible obstacles) + 3 (car current lane) = 87 neurons.
     - Hidden Layer 1: 512 neurons, followed by batch normalization and 50% dropout.
     - Hidden Layer 2: 256 neurons, followed by batch normalization and 50% dropout.
     - Hidden Layer 3: 128 neurons, followed by batch normalization and 50% dropout.
@@ -73,7 +73,7 @@ class DriverModel(nn.Module):
     - Dropout with a rate of 50% is applied after each hidden layer to prevent overfitting.
 
     Note:
-    - The model expects a flattened version of the 3x4x7 input tensor, which should be reshaped to (batch_size, 84) before being passed to the model.
+    - The model expects a flattened version of the 3x4x7+3 input tensor, which should be reshaped to (batch_size, 87) before being passed to the model.
     """
     def __init__(self):
         super(DriverModel, self).__init__()
