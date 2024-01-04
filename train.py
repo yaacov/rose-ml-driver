@@ -29,7 +29,7 @@ import argparse
 import torch.nn as nn
 import torch.optim as optim
 
-from driver import DriverModel, action_to_outputs, actions, obstacles, view_to_inputs
+from model import DriverModel, action_to_outputs, actions, obstacles, view_to_inputs
 
 OBSTACLE_TO_INDEX = {
     "": 0,
@@ -40,9 +40,6 @@ OBSTACLE_TO_INDEX = {
     "water": 5,
     "barrier": 6,
 }
-
-# Car lane, 0 - left, 1 - middle
-car_x = 0
 
 # Training parameters
 num_epochs = 0
@@ -112,10 +109,11 @@ def generate_batch(batch_size):
     inputs = []
     targets = []
     for _ in range(batch_size):
+        car_x = random.choice([0,1,2])
         array = generate_obstacle_array()
         correct_output = driver_simulator(array, car_x)
 
-        input_tensor = view_to_inputs(array)
+        input_tensor = view_to_inputs(array, car_x)
         target_tensor = action_to_outputs(correct_output)
 
         inputs.append(input_tensor)
@@ -161,15 +159,11 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train the model.')
     parser.add_argument('--checkpoint-in', default="", help='Path to the input checkpoint file.')
-    parser.add_argument('--checkpoint-out', default=f"driver-x{car_x}.pth", help='Path to the output checkpoint file.')
+    parser.add_argument('--checkpoint-out', default="", help='Path to the output checkpoint file.')
     parser.add_argument('--num-epochs', type=int, default=10, help='Number of epochs for training.')
     parser.add_argument('--batch-size', type=int, default=200, help='Batch size for training.')
     parser.add_argument('--learning-rate', type=float, default=0.001, help='Learning rate for training.')
-    parser.add_argument('--lane', type=int, default=1, help='Car lane, 0 - left, 1 - middle.')
     args = parser.parse_args()
-
-    # Car lane, 0 - left, 1 - middle
-    car_x = args.lane
 
     # Training parameters
     num_epochs = args.num_epochs
@@ -189,5 +183,5 @@ if __name__ == "__main__":
     main()
     print("Finished Training")
 
-    torch.save(model.state_dict(), args.checkpoint_out)
+    torch.save(model.state_dict(), args.checkpoint_out or f"driver.pth")
     
