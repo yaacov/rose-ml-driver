@@ -151,7 +151,7 @@ def view_to_inputs(array, car_lane):
             tensor[i, j, OBSTACLE_TO_INDEX[obstacle]] = 1
 
     world_tensor = tensor.view(-1)
-    car_lane_tensor = torch.tensor([0, 0, 0, 0, 0, 0])
+    car_lane_tensor = torch.zeros(6)
     car_lane_tensor[car_lane] = 1
 
     return torch.cat((world_tensor, car_lane_tensor))
