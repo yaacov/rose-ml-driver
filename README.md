@@ -1,4 +1,5 @@
 # rose-ml-driver
+
 Demo driver for the ROSE project using machine learning.
 
 ROSE project: https://github.com/RedHat-Israel/ROSE
@@ -23,10 +24,17 @@ podman run --rm \
   --drivers http://127.0.0.1:8082
 ```
 
-Run locally:
+Browse to http://127.0.0.1:8880 to run the game.
+
+Train and run locally:
 
 ```bash
-python client/main.py -d ./driver.py
-```
+# Train a new model
+python train.py
 
-Browse to http://127.0.0.1:8880 to run the game.
+# Copy model to checkpoint directory
+cp driver.pth ./checkpoints
+
+# Run ML driver (using port 8082, default is port 8081)
+python client/main.py -d ./driver.py --port 8082
+```

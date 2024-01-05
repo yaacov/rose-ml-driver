@@ -57,7 +57,7 @@ class DriverModel(nn.Module):
 
     Architecture:
     - Input layer: Size determined by
-      3 (width) x 4 (height) x 7 (possible obstacles) + 3 (car current lane) = 87 neurons.
+      6 (width) x 4 (height) x 7 (possible obstacles) + 6 (car current lane) = 171 neurons.
     - Hidden Layer 1: 512 neurons, followed by batch normalization and 50% dropout.
     - Hidden Layer 2: 256 neurons, followed by batch normalization and 50% dropout.
     - Hidden Layer 3: 128 neurons, followed by batch normalization and 50% dropout.
@@ -73,12 +73,12 @@ class DriverModel(nn.Module):
     - Dropout with a rate of 50% is applied after each hidden layer to prevent overfitting.
 
     Note:
-    - The model expects a flattened version of the 3x4x7+3 input tensor, which should be reshaped to (batch_size, 87) before being passed to the model.
+    - The model expects a flattened version of the 6x4x7+6 input tensor, which should be reshaped to (batch_size, 87) before being passed to the model.
     """
     def __init__(self):
         super(DriverModel, self).__init__()
 
-        self.fc1 = nn.Linear(3 * 4 * 7 + 3, 512)
+        self.fc1 = nn.Linear(6 * 4 * 7 + 6, 512)
         self.bn1 = nn.BatchNorm1d(512)
         self.dropout1 = nn.Dropout(0.5)
 
@@ -129,7 +129,7 @@ def view_to_inputs(array, car_lane):
 
     Args:
         array (list[list[str]]): 2D array representation of the world with obstacles as strings.
-        car_lane (int): current lane of the car, can be 0, 1 or 2.
+        car_lane (int): current lane of the car, can be 0 to 5 (we have 6 lanes).
 
     Returns:
         torch.Tensor: A tensor of shape (1, height * width * num_obstacle_types) suitable for model input.
@@ -151,7 +151,7 @@ def view_to_inputs(array, car_lane):
             tensor[i, j, OBSTACLE_TO_INDEX[obstacle]] = 1
 
     world_tensor = tensor.view(-1)
-    car_lane_tensor = torch.tensor([0, 0, 0])
+    car_lane_tensor = torch.tensor([0, 0, 0, 0, 0, 0])
     car_lane_tensor[car_lane] = 1
 
     return torch.cat((world_tensor, car_lane_tensor))

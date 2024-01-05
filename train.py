@@ -29,7 +29,8 @@ import argparse
 import torch.nn as nn
 import torch.optim as optim
 
-from model import DriverModel, action_to_outputs, actions, obstacles, view_to_inputs
+from model import DriverModel, action_to_outputs, view_to_inputs
+from driver_simulator import driver_simulator
 
 OBSTACLE_TO_INDEX = {
     "": 0,
@@ -61,39 +62,15 @@ def generate_obstacle_array():
     Returns:
         list[list[str]]: 4x3 2D array with random obstacles.
     """
-    array = [["" for _ in range(3)] for _ in range(4)]
+    view_height = 4
+    array = [["" for _ in range(6)] for _ in range(4)]
 
-    for i in range(4):
+    for i in range(view_height):
         obstacle = random.choice(list(OBSTACLE_TO_INDEX.keys()))
-        position = random.randint(0, 2)
+        position = random.randint(0, 5)
         array[i][position] = obstacle
 
     return array
-
-
-def driver_simulator(array, car_x):
-    """
-    Simulates the driver's decision based on the obstacle in front of the car.
-
-    Args:
-        array (list[list[str]]): 2D array representation of the world with obstacles as strings.
-        car_x (int): The car's x position.
-
-    Returns:
-        str: The determined action for the car to take. Possible actions include those defined in the `actions` class.
-    """
-    obstacle = array[3][car_x]
-
-    if obstacle == obstacles.PENGUIN:
-        return actions.PICKUP
-    elif obstacle == obstacles.WATER:
-        return actions.BRAKE
-    elif obstacle == obstacles.CRACK:
-        return actions.JUMP
-    elif obstacle == obstacles.NONE:
-        return actions.NONE
-    else:
-        return actions.RIGHT if (car_x % 3) == 0 else actions.LEFT
 
 
 def generate_batch(batch_size):
@@ -109,12 +86,12 @@ def generate_batch(batch_size):
     inputs = []
     targets = []
     for _ in range(batch_size):
-        car_x = random.choice([0,1,2])
+        car_x = random.randint(0, 5)
         array = generate_obstacle_array()
-        correct_output = driver_simulator(array, car_x)
+        correct_action = driver_simulator(array, car_x)
 
         input_tensor = view_to_inputs(array, car_x)
-        target_tensor = action_to_outputs(correct_output)
+        target_tensor = action_to_outputs(correct_action)
 
         inputs.append(input_tensor)
         targets.append(target_tensor)
@@ -160,7 +137,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train the model.')
     parser.add_argument('--checkpoint-in', default="", help='Path to the input checkpoint file.')
     parser.add_argument('--checkpoint-out', default="", help='Path to the output checkpoint file.')
-    parser.add_argument('--num-epochs', type=int, default=10, help='Number of epochs for training.')
+    parser.add_argument('--num-epochs', type=int, default=20, help='Number of epochs for training.')
     parser.add_argument('--batch-size', type=int, default=200, help='Batch size for training.')
     parser.add_argument('--learning-rate', type=float, default=0.001, help='Learning rate for training.')
     args = parser.parse_args()

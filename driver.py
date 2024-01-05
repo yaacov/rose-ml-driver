@@ -52,43 +52,31 @@ model.eval()
 # ----------------------------------------------------------------------------------
 
 
-def build_lane_view(world, height, lane):
+def build_car_view(world, height):
     """
-    Build a 3xN 2D array representation of the world based on the car's lane and x position.
+    Build a 6xN 2D array representation of the world based on the car's position.
 
     Args:
         world (World): An instance of the World class providing read-only
                        access to the current game state.
         height (int): The height of the returned 2D array.
-        lane (int) : The car's current lane, 0 or 1. This determines the starting x-coordinate for the 2D array.
 
     Returns:
-        list[list[str]]: 3xN array representation of the world view from the car, where N is the specified height.
+        list[list[str]]: 6xN array representation of the world view from the car, where N is the specified height.
                           The bottom line is one line above the car's y position, and the top line is the line height lines above that.
                           The array provides a view of the world from the car's perspective, with the car's y position excluded.
 
     Notes:
         The function uses the car's y position to determine the vertical range of the 2D array.
-        The starting x-coordinate is determined by the car's lane. If the lane is 0, the starting x is 0. If the lane is 1, the starting x is 3.
-        The function also provides a wrapper around world.get to handle negative y values, returning an empty string for such cases.
     """
     car_y = world.car.y
-
-    # Determine the starting x-coordinate for the 2D array based on the car's x position
-    start_x = 0 if lane == 0 else 3
 
     # Calculate the starting y-coordinate based on the car's y position and the desired height
     start_y = car_y - height
 
-    # Wrapper around world.get to handle negative y values
-    def get_value(j, i):
-        if i < 0:
-            return ""
-        return world.get((j, i))
-
     # Generate the 2D array from start_y up to world.car.y
     array = [
-        [get_value(j + start_x, i) for j in [0, 1, 2]] for i in range(start_y, car_y)
+        [world.get((j, i)) for j in range(6)] for i in range(start_y, car_y)
     ]
 
     return array
@@ -116,12 +104,11 @@ def drive(world):
     """
     view_height = 4
 
-    lane = 0 if world.car.x < 3 else 1
-    x_in_lane = world.car.x % 3
+    car_x = world.car.x
 
     # Convert real world input, into a tensor
-    view = build_lane_view(world, view_height, lane)
-    input_tensor = view_to_inputs(view, x_in_lane).unsqueeze(0)
+    view = build_car_view(world, view_height)
+    input_tensor = view_to_inputs(view, car_x).unsqueeze(0)
 
     # Use neural network model to get the outputs tensor
     output = model(input_tensor)
